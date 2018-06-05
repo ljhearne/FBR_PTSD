@@ -6,3 +6,5 @@ The data for all these analyses were collected as part of the [Family Business R
 Folders include:
 - Prevalence
 - Identification
+
+None of the raw data are available here (as it is quite sensitive).
