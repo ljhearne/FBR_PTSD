@@ -50,7 +50,21 @@ library(glmnet)
 # Lasso penalized regression with all scales.
 x <- cbind(K6,GEM,TSCL,PTCI,BSSS)
 x <- as.matrix(x)
-lass <- glmnet(x, y, family = "binomial", alpha = 1, lambda = NULL)
+set.seed(1)
+lass <- glmnet(x, y, family = "binomial", alpha = 1)
+plot(lass)
 
-lam <-0.075 # lam is set manually to derive 10 items (~ number of useful items)
-coef(lass, lam)
+#lam <-0.075 # lam is set manually to derive 10 items (~ number of useful items)
+lam <-0.13 # 5 items
+lasso_coef = coef(lass, lam)
+
+predicted_values <- predict(lass, x, s = lam, type = "class")
+actual_values<-mod2$y
+confusionMatrix(as.factor(predicted_values), as.factor(y), positive="1") 
+
+tLL <- lass$nulldev - deviance(lass)
+k <- lass$df
+n <- lass$nobs
+AICc <- -tLL+2*k+2*k*(k+1)/(n-k-1)
+plot(AICc)
+
