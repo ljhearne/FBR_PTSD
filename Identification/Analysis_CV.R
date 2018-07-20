@@ -20,7 +20,7 @@ PTSD <- Data[,grepl("ICD_PTSD12m", names(Data))]
 
 # parameters & preallocation
 threshold=0.5
-perms <- 1:500
+perms <- 1:100
 N <- 104
 Sens_perm <- matrix(data=NA,nrow=max(perms),ncol=4)
 Spec_perm <- matrix(data=NA,nrow=max(perms),ncol=4)
@@ -113,31 +113,61 @@ print(paste0("LASSO variables in order ",LAS$labels[1:16]))
 print(paste0("LASSO variables consistency ",LAS$items[1:16]/max(perms)))
 
 ## Comparison Statistics
-# repeated measures ANOVA.
-write.csv(Sens_perm, file = "SENS.csv") #save the weights
-write.csv(Spec_perm, file = "SPEC.csv") #save the weights
+# repeated measures ANOVA and follow-up tests
+library(reshape2)
+lab <- c("BSSS clinical","BSSS","GEM+K6","LASSO")
+
+SensModel <- data.frame(Sens_perm)
+names(SensModel) = lab
+SensModel$ID = 1:nrow(SensModel)
+SensModel <- melt(SensModel,id.vars = "ID")
+model <- aov(value ~ variable, data = SensModel)
+summary(model)
+pairwise.t.test(SensModel$value,SensModel$variable, p.adjust.method = "bonferroni")
+
+SpecModel <- data.frame(Spec_perm)
+names(SpecModel) = lab
+SpecModel$ID = 1:nrow(SpecModel)
+SpecModel <- melt(SpecModel,id.vars = "ID")
+model <- aov(value ~ variable, data = SpecModel)
+summary(model)
+pairwise.t.test(SpecModel$value,SpecModel$variable, p.adjust.method = "bonferroni")
+
+
+
+
 
 ## PLOT
 library(ggplot2)
 library(gridExtra)
 
 
-lims <- c(0, 1)
-lab <- c("BSSS clinical","BSSS","GEM+K6","LASSO")
+lims <- c(0, 1.05)
 dat <- stack(as.data.frame(Sens_perm))
+
+means <- colMeans(Sens_perm)
 p1 <-ggplot(dat) + 
   geom_boxplot(aes(x = ind, y = values),width = 0.4,fill="gray90",lwd=0.5) +
   labs(x = "",y = "Sensitivity") +
   scale_x_discrete(labels= lab) +
   scale_y_continuous(limits = lims) +
+  geom_text(x=1,y=1.05,label = round(means[1],2),size = 3.5) +
+  geom_text(x=2,y=1.05,label = round(means[2],2),size = 3.5) +
+  geom_text(x=3,y=1.05,label = round(means[3],2),size = 3.5) +
+  geom_text(x=4,y=1.05,label = round(means[4],2),size = 3.5) +
   theme_classic()
 
 dat <- stack(as.data.frame(Spec_perm))
+means <- colMeans(Spec_perm)
 p2 <-ggplot(dat) + 
   geom_boxplot(aes(x = ind, y = values),width = 0.4,fill="gray90",lwd=0.5) +
   labs(x = "",y = "Specificity") +
   scale_x_discrete(labels= lab) +
   scale_y_continuous(limits = lims) +
+  geom_text(x=1,y=1.05,label = round(means[1],2),size = 3.5) +
+  geom_text(x=2,y=1.05,label = round(means[2],2),size = 3.5) +
+  geom_text(x=3,y=1.05,label = round(means[3],2),size = 3.5) +
+  geom_text(x=4,y=1.05,label = round(means[4],2),size = 3.5) +
   theme_classic()
 
 dat <- stack(as.data.frame(Accu_perm))
